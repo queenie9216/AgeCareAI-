@@ -19,6 +19,188 @@ from typing import List, Dict, Optional, Any
 import time
 
 # =============================================================================
+# CUSTOM CSS STYLING
+# =============================================================================
+
+st.markdown("""
+<style>
+    /* Main theme colors */
+    :root {
+        --primary: #1E3A5F;
+        --secondary: #3B82F6;
+        --success: #10B981;
+        --warning: #F59E0B;
+        --danger: #EF4444;
+        --bg-dark: #0F172A;
+        --bg-card: #1E293B;
+        --text-primary: #F8FAFC;
+        --text-secondary: #94A3B8;
+    }
+
+    /* Page background */
+    .stApp {
+        background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+    }
+
+    /* Headers */
+    h1, h2, h3 {
+        color: #F8FAFC !important;
+        font-weight: 600 !important;
+    }
+
+    /* Metric cards */
+    [data-testid="stMetricValue"] {
+        font-size: 1.8rem !important;
+        font-weight: 700 !important;
+        color: #3B82F6 !important;
+    }
+
+    [data-testid="stMetricLabel"] {
+        color: #94A3B8 !important;
+        font-size: 0.85rem !important;
+    }
+
+    /* Cards */
+    .stCard {
+        background: #1E293B;
+        border-radius: 12px;
+        padding: 1rem;
+        border: 1px solid #334155;
+    }
+
+    /* Dataframes */
+    [data-testid="stDataFrame"] {
+        background: #1E293B;
+        border-radius: 8px;
+    }
+
+    /* Headers in dataframes */
+    [data-testid="stDataFrame"] th {
+        background: #334155 !important;
+        color: #F8FAFC !important;
+    }
+
+    /* Buttons */
+    .stButton > button {
+        background: #3B82F6;
+        color: white;
+        border-radius: 8px;
+        border: none;
+        padding: 0.5rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .stButton > button:hover {
+        background: #2563EB;
+        transform: translateY(-2px);
+    }
+
+    /* Success button */
+    .success-btn > button {
+        background: #10B981 !important;
+    }
+
+    /* Danger button */
+    .danger-btn > button {
+        background: #EF4444 !important;
+    }
+
+    /* Sidebar */
+    [data-testid="stSidebar"] {
+        background: #0F172A !important;
+        border-right: 1px solid #334155;
+    }
+
+    [data-testid="stSidebarNav"] {
+        background: #0F172A;
+    }
+
+    /* Radio buttons */
+    .stRadio > label {
+        color: #F8FAFC !important;
+    }
+
+    /* Dividers */
+    hr {
+        border-color: #334155 !important;
+        margin: 1.5rem 0 !important;
+    }
+
+    /* Info boxes */
+    .info-box {
+        background: #1E3A5F;
+        border-left: 4px solid #3B82F6;
+        padding: 1rem;
+        border-radius: 8px;
+        margin: 1rem 0;
+    }
+
+    /* Risk indicators */
+    .risk-high {
+        background: rgba(239, 68, 68, 0.15);
+        color: #FCA5A5;
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+
+    .risk-medium {
+        background: rgba(245, 158, 11, 0.15);
+        color: #FCD34D;
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+
+    .risk-low {
+        background: rgba(16, 185, 129, 0.15);
+        color: #6EE7B7;
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+
+    /* Navigation active state */
+    .nav-active {
+        background: #3B82F6;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+    }
+
+    /* Alert styling */
+    .stAlert {
+        border-radius: 8px;
+    }
+
+    /* Subheader */
+    .stSubheader {
+        color: #F8FAFC !important;
+        font-size: 1.1rem !important;
+        font-weight: 600 !important;
+        margin-top: 1rem !important;
+    }
+
+    /* Tab styling */
+    .stTabs [data-baseweb="tab-list"] {
+        background: #1E293B;
+        border-radius: 8px;
+        padding: 0.5rem;
+    }
+
+    .stTabs [data-baseweb="tab"] {
+        color: #94A3B8 !important;
+    }
+
+    .stTabs [aria-selected="true"] {
+        background: #3B82F6 !important;
+        color: white !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# =============================================================================
 # DATA MODELS & ENUMS
 # =============================================================================
 
@@ -1159,8 +1341,17 @@ def render_typhoon_scenario(seniors: List[Senior], caregivers: List[Caregiver]):
 
 def render_welcome_page():
     """Render the home page with system overview."""
-    st.title("AgeCareAI")
-    st.markdown("Autonomous Elder Care Platform — Singapore")
+    # Hero section
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #1E3A5F 0%, #0F172A 100%);
+                padding: 2rem; border-radius: 12px; margin-bottom: 2rem; text-align: center;">
+        <h1 style="color: #F8FAFC; margin: 0; font-size: 2.5rem;">AgeCareAI</h1>
+        <p style="color: #94A3B8; margin: 0.5rem 0 0; font-size: 1.1rem;">
+            Autonomous Elder Care Platform — Built for Singapore
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
     st.divider()
 
     # System overview metrics
@@ -1293,11 +1484,11 @@ def render_welcome_page():
 
 def main():
     st.set_page_config(
-        page_title="AgeCareAI — Smart Elder Care",
+        page_title="AgeCareAI — Smart Elder Care Platform",
         page_icon="🏥",
         layout="wide",
         menu_items={
-            "About": "AgeCareAI — Autonomous Elder Care Platform for Singapore",
+            "About": "AgeCareAI — Autonomous Elder Care Platform for Singapore. Four integrated AI layers for fall detection, health risk prediction, caregiver scheduling, and autonomous care response.",
             "Get help": None,
             "Report a bug": None
         }
@@ -1307,9 +1498,9 @@ def main():
 
     # Sidebar navigation
     with st.sidebar:
-        st.title("AgeCareAI")
-        st.markdown("Smart Elder Care Platform")
-        st.divider()
+        st.markdown("<h2 style='color:#3B82F6; margin-bottom:0;'>AgeCareAI</h2>", unsafe_allow_html=True)
+        st.markdown("<p style='color:#94A3B8; font-size:0.9rem;'>Smart Elder Care Platform</p>", unsafe_allow_html=True)
+        st.markdown("---")
 
         page_options = [
             "Home",
@@ -1319,14 +1510,14 @@ def main():
             "L4: Care Agent"
         ]
         selected_page = st.radio(
-            "Navigate:",
+            "Select Layer:",
             page_options,
-            index=0,
-            horizontal=True
+            index=0
         )
 
-        st.divider()
-        st.caption("Singapore Eldercare AI v1.0")
+        st.markdown("---")
+        st.markdown("<p style='color:#94A3B8; font-size:0.8rem;'>Built for Singapore's<br/>elderly care system</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color:#64748B; font-size:0.75rem;'>v1.0 | 2024</p>", unsafe_allow_html=True)
 
     # Initialize data (only once)
     if 'seniors' not in st.session_state:
