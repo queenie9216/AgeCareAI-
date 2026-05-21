@@ -1,55 +1,64 @@
 # AgeCareAI — Autonomous Elder Care Platform
 
-Singapore
+**What it does:** Detects falls, predicts health risks, optimizes caregiver schedules, and autonomously responds to care events — all in one Streamlit app.
 
-## Four AI Layers
+**Built for:** Singapore's elderly care system (1 in 4 citizens will be over 65 by 2030).
 
-| Layer  | Function              | Technology                             |
-| ------ | --------------------- | -------------------------------------- |
-| **L1** | Fall Detection        | RandomForest on accelerometer data     |
-| **L2** | Health Risk Dashboard | RandomForest + SHAP explainability     |
-| **L3** | Caregiver Scheduler   | OR-Tools MILP optimization             |
-| **L4** | Care Agent            | Decision tree with typhoon integration |
+---
 
-## Deployment
-
-### Local
+## Quick Start
 
 ```bash
 pip install -r requirements.txt
 streamlit run app.py
 ```
 
-### Streamlit Cloud
+Then open http://localhost:8501
 
-1. Push this repo to GitHub
+## How It Works
+
+The app has 4 AI layers. Navigate using the sidebar:
+
+| Layer                  | What It Does                                                | How To Use                                                                                                          |
+| ---------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| **L1: Fall Detection** | Classifies movement as Normal Walk, Shuffle Gait, or Fall   | Select a sequence, see real-time classification. Fall + 85% confidence triggers alert.                              |
+| **L2: Health Risk**    | Predicts 30-day hospital readmission risk (Low/Medium/High) | View traffic-light table sorted by risk. Click any senior to see SHAP factors explaining each prediction.           |
+| **L3: Scheduler**      | Assigns caregivers to seniors using MILP optimization       | View assignments. Click "Caregiver Cancels" to remove a caregiver and watch the solver re-optimize in milliseconds. |
+| **L4: Care Agent**     | Autonomous decision-making on care events                   | See pre-loaded events with AI reasoning steps. Click "Trigger Typhoon Scenario" to test crisis mode.                |
+
+**Typhoon Integration:** L4 simultaneously calls L3's solver and executes care decisions — both update in the same second.
+
+## Deploy to Streamlit Cloud (Free)
+
+1. Push to GitHub
 2. Go to [share.streamlit.io](https://share.streamlit.io)
-3. Connect your GitHub repo
-4. Select `app.py` as the main file
-5. Deploy
-
-**Requirements:** Python 3.9+, all dependencies in `requirements.txt`
+3. Connect repo → select `app.py` → Deploy
 
 ## Project Structure
 
 ```
-AgeCareAI/
-├── app.py                 # Main Streamlit application
-├── requirements.txt       # Python dependencies
-├── .streamlit/
-│   └── config.toml       # Streamlit configuration
-├── specs/                 # Detailed specifications
-├── 01-analysis/          # Analysis documents
-├── 02-plans/              # Implementation plans
-├── 03-user-flows/        # User flow documentation
-└── 04-validate/          # Validation reports
+workspaces/AgeCareAI/
+├── app.py                 # Main Streamlit app (all 4 layers)
+├── requirements.txt       # Dependencies
+├── .streamlit/config.toml # Streamlit settings
+├── briefs/              # User requirements
+├── specs/                # Technical specifications
+├── 01-analysis/         # Research documents
+└── 04-validate/         # Test results
 ```
 
-## Dependencies
+## Tech Stack
 
-- streamlit >= 1.28.0
-- scikit-learn >= 1.3.0
-- shap >= 0.44.0
-- ortools >= 9.8.0
-- numpy >= 1.24.0
-- pandas >= 2.0.0
+| Component      | Technology                                   |
+| -------------- | -------------------------------------------- |
+| UI             | Streamlit                                    |
+| Fall Detection | RandomForest on simulated accelerometer data |
+| Health Risk    | XGBoost + SHAP explainability                |
+| Scheduling     | OR-Tools MILP (constraint optimization)      |
+| Care Agent     | Decision tree for event response             |
+
+## Who It's For
+
+- **Elderly patients** — immediate fall alerts, health monitoring
+- **Caregivers** — optimized schedules, 24/7 alerts
+- **Healthcare system** — risk-ranked worklists, reduced readmissions
