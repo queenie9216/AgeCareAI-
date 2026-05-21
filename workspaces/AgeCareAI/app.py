@@ -275,19 +275,24 @@ def generate_accelerometer_sequence(sequence_type: str, n_samples: int = 150) ->
     """
     t = np.linspace(0, 3, n_samples)
 
-    if sequence_type == "Normal Walk":
+    # Normalize sequence type for comparison
+    seq_type_normalized = sequence_type.strip().lower().replace(" ", "_").replace("-", "_")
+
+    if seq_type_normalized in ("normal_walk", "normal"):
         # Regular stride pattern with consistent vertical oscillation
         y = 1.0 + 0.2 * np.sin(2 * np.pi * 2 * t) + np.random.normal(0, 0.05, n_samples)
         x = 0.1 * np.sin(2 * np.pi * 1 * t) + np.random.normal(0, 0.03, n_samples)
         z = 0.05 * np.sin(2 * np.pi * 0.5 * t) + np.random.normal(0, 0.02, n_samples)
 
-    elif sequence_type == "Shuffle Gait":
+    elif seq_type_normalized in ("shuffle_gait", "shuffle"):
+        # Short steps, reduced vertical range
         # Short steps, reduced vertical range
         y = 1.0 + 0.1 * np.sin(2 * np.pi * 1 * t) + np.random.normal(0, 0.08, n_samples)
         x = 0.15 * np.sin(2 * np.pi * 0.8 * t) + np.random.normal(0, 0.05, n_samples)
         z = 0.03 * np.random.normal(0, 1, n_samples)
 
-    elif sequence_type == "Fall":
+    elif seq_type_normalized == "fall":
+        # 5-phase: pre-fall (0-0.5s), free-fall (0.5-0.8s), rotation (0.8-1.0s), impact (1.0-1.2s), settle (1.2-3.0s)
         # 5-phase: pre-fall (0-0.5s), free-fall (0.5-0.8s), rotation (0.8-1.0s), impact (1.0-1.2s), settle (1.2-3.0s)
         y = np.zeros(n_samples)
         x = np.zeros(n_samples)
@@ -323,6 +328,11 @@ def generate_accelerometer_sequence(sequence_type: str, n_samples: int = 150) ->
                 y[i] = 1.0 + 0.3 * decay + 0.05 * np.random.normal()
                 x[i] = 0.1 * decay + 0.05 * np.random.normal()
                 z[i] = 0.02 * np.random.normal()
+    else:
+        # Default to normal walk if unknown type
+        y = 1.0 + 0.2 * np.sin(2 * np.pi * 2 * t) + np.random.normal(0, 0.05, n_samples)
+        x = 0.1 * np.sin(2 * np.pi * 1 * t) + np.random.normal(0, 0.03, n_samples)
+        z = 0.05 * np.sin(2 * np.pi * 0.5 * t) + np.random.normal(0, 0.02, n_samples)
 
     return np.column_stack([x, y, z])
 
@@ -590,6 +600,9 @@ def solve_schedule(seniors: List[Senior], caregivers: List[Caregiver], cancelled
 
     # Solve
     solver = cp_model.CpSolver()
+    solver.parameters.num_workers = 4  # Parallel search
+    solver.parameters.max_time_in_seconds = 5.0  # 5 second limit
+    solver.parameters.stop_after_first_solution = True  # Stop at first feasible
     start_time = time.time()
     status = solver.solve(model)
     solve_time_ms = (time.time() - start_time) * 1000
