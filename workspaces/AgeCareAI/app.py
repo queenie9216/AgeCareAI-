@@ -1163,32 +1163,123 @@ def render_welcome_page():
     st.markdown("Autonomous Elder Care Platform — Singapore")
     st.divider()
 
-    # Key metrics
-    st.subheader("System Overview")
+    # System overview metrics
+    st.subheader("Platform Overview")
     m_col1, m_col2, m_col3, m_col4 = st.columns(4)
     with m_col1:
-        st.metric("AI Layers", "4", "Integrated")
+        st.metric("AI Layers", "4", "Integrated System")
     with m_col2:
-        st.metric("Risk Prediction", "XGBoost", "ML Model")
+        st.metric("Risk Prediction", "XGBoost + SHAP", "Explainable AI")
     with m_col3:
-        st.metric("Scheduling", "OR-Tools", "MILP Optimization")
+        st.metric("Scheduling", "OR-Tools MILP", "Optimal Assignments")
     with m_col4:
         st.metric("Response", "Real-time", "24/7 Monitoring")
 
     st.divider()
 
-    # Brief context
-    st.subheader("Platform Purpose")
-    col1, col2 = st.columns([3, 1])
+    # What is this app
+    st.subheader("What Is AgeCareAI?")
+    st.markdown("""
+    AgeCareAI is an autonomous elder care platform designed for Singapore's healthcare system.
+    It combines four AI layers to provide comprehensive care support:
+    """)
+    
+    col1, col2 = st.columns(2)
     with col1:
-        st.markdown("AgeCareAI addresses Singapore's elder care challenge through four integrated AI layers: fall detection, health risk prediction, caregiver scheduling, and autonomous care response.")
+        st.markdown("""
+        **L1 - Fall Detection**
+        - Detects falls from wearable accelerometer data
+        - Triggers immediate alerts above 0.85 confidence
+        - Uses RandomForest CNN classifier
+        """)
     with col2:
-        st.metric("Singapore 2030", "1 in 4", "Citizens over 65")
+        st.markdown("""
+        **L2 - Health Risk Dashboard**
+        - Predicts 30-day hospital readmission risk
+        - Traffic-light system (High/Medium/Low)
+        - SHAP explainability for each prediction
+        """)
+
+    col3, col4 = st.columns(2)
+    with col3:
+        st.markdown("""
+        **L3 - Caregiver Scheduler**
+        - MILP optimization for daily assignments
+        - Considers certifications, zones, availability
+        - Real-time re-optimization on cancellations
+        """)
+    with col4:
+        st.markdown("""
+        **L4 - Care Agent**
+        - Autonomous decision-making on events
+        - Coordinates EMS, family alerts, bookings
+        - Typhoon scenario for crisis management
+        """)
 
     st.divider()
 
-    # Navigation
-    st.subheader("Navigate")
+    # Who is it for
+    st.subheader("Who Benefits?")
+    audience_col1, audience_col2, audience_col3 = st.columns(3)
+    with audience_col1:
+        st.markdown("**Elderly Patients**")
+        st.markdown("- Immediate fall detection")
+        st.markdown("- Health risk monitoring")
+        st.markdown("- Medication reminders")
+    with audience_col2:
+        st.markdown("**Families & Caregivers**")
+        st.markdown("- 24/7 monitoring alerts")
+        st.markdown("- Optimized care schedules")
+        st.markdown("- Peace of mind")
+    with audience_col3:
+        st.markdown("**Healthcare System**")
+        st.markdown("- Risk-ranked patient lists")
+        st.markdown("- Reduced hospital readmissions")
+        st.markdown("- Efficient resource allocation")
+
+    st.divider()
+
+    # How to use
+    st.subheader("How To Use This Platform")
+    st.markdown("""
+    Navigate using the sidebar on the left. Start with **L1** to see fall detection,
+    then progress through **L2**, **L3**, and **L4** to understand how the layers integrate.
+    """)
+    
+    usage_col1, usage_col2 = st.columns(2)
+    with usage_col1:
+        st.markdown("**Quick Start**")
+        st.markdown("1. Select a layer from the sidebar")
+        st.markdown("2. Explore the interactive dashboard")
+        st.markdown("3. Click buttons to trigger actions")
+    with usage_col2:
+        st.markdown("**Key Features**")
+        st.markdown("- L3: Click caregiver to remove and see re-optimize")
+        st.markdown("- L4: Click events to see AI reasoning")
+        st.markdown("- Typhoon button triggers crisis scenario")
+
+    st.divider()
+
+    # Regional context
+    st.subheader("Singapore & Beyond")
+    context_col1, context_col2 = st.columns([2, 1])
+    with context_col1:
+        st.markdown("""
+        Singapore has one of the fastest-aging populations globally. By 2030, 1 in 4 citizens
+        will be over 65. AgeCareAI was designed specifically for Singapore's healthcare zones,
+        regulations, and demographic needs.
+        
+        The platform is structured to expand to other countries including Japan, South Korea,
+        and Taiwan where similar aging challenges exist.
+        """)
+    with context_col2:
+        st.metric("Singapore 2030", "1 in 4", "Citizens over 65")
+        st.metric("Deployment", "Singapore", "First Market")
+
+    st.divider()
+
+    # Navigation table
+    st.subheader("Navigate the Demo")
     nav_data = {
         "Layer": ["L1", "L2", "L3", "L4"],
         "Function": ["Fall Detection", "Health Risk Dashboard", "Caregiver Schedule", "Care Agent"],
@@ -1196,6 +1287,7 @@ def render_welcome_page():
         "Benefit": ["Immediate alerts", "Risk-ranked worklist", "Optimal assignments", "Automated response"]
     }
     st.dataframe(pd.DataFrame(nav_data), use_container_width=True, hide_index=True)
+
 
 
 
