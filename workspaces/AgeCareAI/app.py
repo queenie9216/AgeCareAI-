@@ -783,12 +783,14 @@ def execute_action(action: str, event: Event) -> Dict[str, Any]:
 
 def render_l1_page(fall_detector: FallDetector, sequences: Dict[str, np.ndarray]):
     """Render L1 Fall Detection page."""
-    st.header("L1: Fall Detection")
-    st.markdown("### Accelerometer Data Stream (3-axis, 50Hz)")
+    st.subheader("L1: Fall Detection")
+    st.markdown("Real-time accelerometer classification with confidence scoring")
 
     # Sequence selector
     sequence_options = ["Normal Walk", "Shuffle Gait", "Fall"]
-    selected = st.radio("Select Movement Sequence:", sequence_options, index=0)
+    selected = st.radio("Select Movement Sequence:", sequence_options, index=0, horizontal=True)
+
+    st.divider()
 
     # Generate or retrieve sequence
     if selected not in sequences:
@@ -797,35 +799,41 @@ def render_l1_page(fall_detector: FallDetector, sequences: Dict[str, np.ndarray]
     buffer = sequences[selected]
 
     # Live chart
-    chart_placeholder = st.empty()
     df = pd.DataFrame(buffer, columns=["X", "Y", "Z"])
-    chart_placeholder.line_chart(df)
+    st.line_chart(df, height=200)
+
+    st.divider()
 
     # Classification
     result = fall_detector.classify(buffer)
-    col1, col2 = st.columns(2)
+
+    col1, col2, col3 = st.columns(3)
     with col1:
         st.metric("Predicted Class", result["label"])
     with col2:
-        st.metric("Confidence", f"{result['confidence']:.2%}")
+        st.metric("Confidence", f"{result['confidence']:.2%}", delta="High" if result["label"] == "Fall" else None)
+    with col3:
+        alert_status = "ACTIVE" if result["label"] == "Fall" and result["confidence"] >= 0.85 else "Normal"
+        st.metric("Alert Status", alert_status)
 
-    # Confidence gauge (simulated with bar)
-    st.markdown("**Confidence by Class:**")
+    # Confidence gauge
+    st.subheader("Classification Probabilities")
     conf_df = pd.DataFrame([
         {"Class": k, "Probability": v}
         for k, v in result["all_probabilities"].items()
     ])
-    st.bar_chart(conf_df.set_index("Class"))
+    st.bar_chart(conf_df.set_index("Class"), height=180)
 
     # Alert
     if result["label"] == "Fall" and result["confidence"] >= 0.85:
-        st.error("🚨 FALL DETECTED - Immediate Attention Required!")
+        st.error("⚠️ FALL DETECTED — Immediate attention required")
         st.session_state.l1_alert_triggered = True
     else:
         st.session_state.l1_alert_triggered = False
 
     # Log
-    st.markdown("### Classification Log")
+    st.divider()
+    st.subheader("Classification History")
     log_entry = {
         "Timestamp": datetime.now().strftime("%H:%M:%S"),
         "Class": result["label"],
@@ -835,59 +843,100 @@ def render_l1_page(fall_detector: FallDetector, sequences: Dict[str, np.ndarray]
     st.session_state.l1_classification_log.append(log_entry)
     if st.session_state.l1_classification_log:
         log_df = pd.DataFrame(st.session_state.l1_classification_log[-10:])
-        st.table(log_df)
+        st.dataframe(log_df, hide_index=True, use_container_width=True)
 
 def render_l2_page(risk_predictor: HealthRiskPredictor):
     """Render L2 Health Risk Dashboard page."""
-    st.header("L2: Health Risk Dashboard")
-    st.markdown("### 30-Day Readmission Risk Assessment")
+    st.subheader("L2: Health Risk Dashboard")
+    st.markdown("30-day readmission risk assessment with explainable AI")
 
     assessments = [risk_predictor.predict(s) for s in risk_predictor.seniors]
     assessments.sort(key=lambda a: a.risk_score, reverse=True)
 
+    # Summary metrics
+    high_risk = sum(1 for a in assessments if a.risk_level == RiskLevel.HIGH)
+    med_risk = sum(1 for a in assessments if a.risk_level == RiskLevel.MEDIUM)
+    low_risk = sum(1 for a in assessments if a.risk_level == RiskLevel.LOW)
+
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Total Seniors", len(assessments))
+    with col2:
+        st.metric("High Risk", high_risk, delta_color="off")
+    with col3:
+        st.metric("Medium Risk", med_risk, delta_color="off")
+    with col4:
+        st.metric("Low Risk", low_risk, delta_color="off")
+
+    st.divider()
+
     # Traffic light table
-    st.markdown("**Tele-Nurse Worklist** (sorted by risk score)")
+    st.subheader("Tele-Nurse Worklist")
+    st.markdown("Sorted by risk score — highest priority at top")
+
     rows = []
     for a in assessments:
-        risk_color = {"High": "🔴", "Medium": "🟡", "Low": "🟢"}[a.risk_level.value]
-        top_factors = ", ".join([f["feature_name"] for f in [
-            {"feature_name": f.feature_name} for f in a.top_3_factors
-        ]])
+        senior = next(s for s in risk_predictor.seniors if s.id == a.senior_id)
+        top_factors = ", ".join([f.feature_name for f in a.top_3_factors[:3]])
         rows.append({
             "Senior": a.senior_name,
-            "Age": risk_predictor.seniors[[s.id for s in risk_predictor.seniors].index(a.senior_id)].age,
-            "Risk Level": f"{risk_color} {a.risk_level.value}",
-            "Risk Score": f"{a.risk_score:.2f}",
-            "Top 3 Factors": top_factors
+            "Age": senior.age,
+            "Risk Level": a.risk_level.value,
+            "Risk Score": round(a.risk_score, 3),
+            "Top Factors": top_factors
         })
 
     df = pd.DataFrame(rows)
-    st.table(df)
+
+    # Color coding via column config
+    def color_risk(val):
+        if val == "High":
+            return "background-color: #fee2e2; color: #991b1b"
+        elif val == "Medium":
+            return "background-color: #fef9c3; color: #854d0e"
+        else:
+            return "background-color: #dcfce7; color: #166534"
+
+    styled_df = df.style.applymap(color_risk, subset=["Risk Level"])
+    st.dataframe(styled_df, hide_index=True, use_container_width=True)
+
+    st.divider()
 
     # SHAP detail for selected senior
-    st.markdown("### SHAP Explanation Detail")
+    st.subheader("Risk Factor Analysis")
     senior_names = [a.senior_name for a in assessments]
-    selected_senior = st.selectbox("Select Senior for SHAP Detail:", senior_names)
+    selected_senior = st.selectbox("Select a senior:", senior_names)
     selected_assessment = next(a for a in assessments if a.senior_name == selected_senior)
 
-    st.markdown(f"**{selected_assessment.senior_name}** - Risk Level: {selected_assessment.risk_level.value}")
-    st.markdown("**Top 3 Risk Factors:**")
-    for factor in selected_assessment.top_3_factors:
-        direction_icon = "↑" if factor.direction == "increases_risk" else "↓"
-        st.write(f"- {direction_icon} {factor.feature_name}: {factor.feature_value:.3f} (SHAP: {factor.shap_value:.3f})")
+    col1, col2 = st.columns([1, 2])
+    with col1:
+        risk_color_map = {"High": "red", "Medium": "orange", "Low": "green"}
+        st.markdown(f"**{selected_assessment.senior_name}**")
+        st.markdown(f"Risk Level: :{risk_color_map.get(selected_assessment.risk_level.value, 'gray')}[{selected_assessment.risk_level.value}]")
+        st.markdown(f"Risk Score: {selected_assessment.risk_score:.3f}")
 
-    # Summary
-    st.markdown("### Risk Distribution")
+    with col2:
+        st.markdown("**Top 3 Risk Factors:**")
+        for factor in selected_assessment.top_3_factors:
+            direction_icon = "↑" if factor.direction == "increases_risk" else "↓"
+            color = "#dc2626" if factor.direction == "increases_risk" else "#16a34a"
+            st.markdown(f"- {direction_icon} **{factor.feature_name}**: {factor.feature_value:.3f} (impact: {factor.shap_value:.3f})")
+
+    st.divider()
+
+    # Risk distribution chart
+    st.subheader("Risk Distribution")
     risk_counts = pd.DataFrame([
-        {"Risk Level": "High", "Count": sum(1 for a in assessments if a.risk_level == RiskLevel.HIGH)},
-        {"Risk Level": "Medium", "Count": sum(1 for a in assessments if a.risk_level == RiskLevel.MEDIUM)},
-        {"Risk Level": "Low", "Count": sum(1 for a in assessments if a.risk_level == RiskLevel.LOW)},
+        {"Risk Level": "High", "Count": high_risk},
+        {"Risk Level": "Medium", "Count": med_risk},
+        {"Risk Level": "Low", "Count": low_risk},
     ])
-    st.bar_chart(risk_counts.set_index("Risk Level"))
+    st.bar_chart(risk_counts.set_index("Risk Level"), height=200)
 
 def render_l3_page(seniors: List[Senior], caregivers: List[Caregiver]):
     """Render L3 Caregiver Schedule Optimiser page."""
-    st.header("L3: Caregiver Schedule Optimiser")
+    st.subheader("L3: Caregiver Schedule Optimiser")
+    st.markdown("MILP-optimized daily assignment with real-time re-scheduling")
 
     # Initial solve
     if not st.session_state.l3_schedule:
@@ -896,48 +945,75 @@ def render_l3_page(seniors: List[Senior], caregivers: List[Caregiver]):
         st.session_state.l3_active_caregivers = [cg.id for cg in caregivers]
         st.session_state.l3_solve_time_ms = result["solve_time_ms"]
 
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
     with col1:
         st.metric("Solve Time", f"{st.session_state.l3_solve_time_ms:.1f} ms")
     with col2:
         st.metric("Caregivers Active", len(st.session_state.l3_active_caregivers))
+    with col3:
+        total_slots = sum(len(a.slots) for a in st.session_state.l3_schedule)
+        st.metric("Assignments", total_slots)
 
-    # Cancel buttons
-    st.markdown("### Caregiver Management")
-    for cg in caregivers:
-        if cg.id in st.session_state.l3_active_caregivers:
-            if st.button(f"Cancel: {cg.name}", key=f"cancel_{cg.id}"):
-                st.session_state.l3_active_caregivers.remove(cg.id)
-                result = solve_schedule(seniors, caregivers, cancelled_cg_id=cg.id)
-                st.session_state.l3_schedule = result["schedule"]
-                st.session_state.l3_solve_time_ms = result["solve_time_ms"]
-                st.rerun()
-        else:
-            st.button(f"Restored: {cg.name}", key=f"restore_{cg.id}", disabled=True)
+    st.divider()
+
+    # Caregiver Management
+    st.subheader("Caregiver Availability")
+    st.markdown("Click to toggle caregiver availability — schedule re-optimizes automatically")
+
+    # Create a cleaner button layout
+    cg_cols = st.columns(len(caregivers))
+    for i, cg in enumerate(caregivers):
+        with cg_cols[i]:
+            if cg.id in st.session_state.l3_active_caregivers:
+                st.success(f"✓ {cg.name}")
+                if st.button(f"Remove", key=f"cancel_{cg.id}"):
+                    st.session_state.l3_active_caregivers.remove(cg.id)
+                    result = solve_schedule(seniors, caregivers, cancelled_cg_id=cg.id)
+                    st.session_state.l3_schedule = result["schedule"]
+                    st.session_state.l3_solve_time_ms = result["solve_time_ms"]
+                    st.rerun()
+            else:
+                st.error(f"✗ {cg.name}")
+                if st.button(f"Restore", key=f"restore_{cg.id}"):
+                    st.session_state.l3_active_caregivers.append(cg.id)
+                    result = solve_schedule(seniors, caregivers)
+                    st.session_state.l3_schedule = result["schedule"]
+                    st.session_state.l3_solve_time_ms = result["solve_time_ms"]
+                    st.rerun()
+
+    st.divider()
 
     # Schedule display
-    st.markdown("### Today's Schedule")
-    for assignment in st.session_state.l3_schedule:
-        with st.expander(f"{assignment.caregiver_name} ({assignment.zone_match_count} same-zone)"):
-            for slot in assignment.slots:
-                zone_color = "🟢" if slot.zone_match else "🟡"
-                st.write(f"{zone_color} {slot.senior_name} - {', '.join(slot.care_needs)}")
-
-    if not st.session_state.l3_schedule:
-        st.warning("No feasible schedule found.")
+    st.subheader("Today's Optimized Schedule")
+    if st.session_state.l3_schedule:
+        for assignment in st.session_state.l3_schedule:
+            zone_indicator = "✓" if assignment.zone_match_count > 0 else "○"
+            with st.expander(f"{assignment.caregiver_name} ({assignment.zone_match_count} same-zone assignments)"):
+                for slot in assignment.slots:
+                    zone_tag = "same-zone" if slot.zone_match else "other-zone"
+                    st.markdown(f"- **{slot.senior_name}** — {', '.join(slot.care_needs)} `[{zone_tag}]`")
+    else:
+        st.warning("No feasible schedule found — try restoring a caregiver")
 
 def render_l4_page(events: List[Event], seniors: List[Senior], caregivers: List[Caregiver]):
     """Render L4 Care Agent page."""
-    st.header("L4: Autonomous Care Agent")
+    st.subheader("L4: Autonomous Care Agent")
+    st.markdown("Perception-Reasoning-Action decision system")
 
     # Event triggers
-    st.markdown("### Event Monitor")
-    cols = st.columns(3)
+    st.subheader("Event Monitor")
+    st.markdown("Click to trigger an event and see the AI decision process")
+
+    cols = st.columns(len(events))
     event_results = {}
 
     for i, event in enumerate(events):
         with cols[i]:
-            if st.button(f"Trigger: {event.senior_name}", key=f"event_{event.id}"):
+            risk_color = {"RED": "🔴", "AMBER": "🟡", "GREEN": "🟢"}[event.risk_band.value]
+            st.markdown(f"**{event.senior_name}**, {event.senior_age}")
+            st.markdown(f"Risk: {risk_color} {event.risk_band.value}")
+            st.markdown(f"Type: {event.event_type.value}")
+            if st.button("Trigger Event", key=f"event_{event.id}"):
                 actions = decide_actions(event)
                 action_results = []
                 for action in actions:
@@ -956,18 +1032,30 @@ def render_l4_page(events: List[Event], seniors: List[Senior], caregivers: List[
                     "timestamp": datetime.now()
                 })
 
-    # Event details display
-    st.markdown("### Perception → Reasoning → Action")
-    for event_id, result in event_results.items():
-        with st.expander(f"Event: {result['event'].senior_name}"):
-            st.markdown(f"**PERCEPTION:** {result['perception']}")
-            st.markdown(f"**REASONING:** {result['reasoning']}")
-            st.markdown("**ACTIONS:**")
-            for ar in result["action_results"]:
-                st.write(f"- {ar['message']}")
+    st.divider()
 
-    # Unified log placeholder
-    st.markdown("### Event Log")
+    # Event details display
+    st.subheader("AI Decision Process")
+    if event_results:
+        for event_id, result in event_results.items():
+            with st.expander(f"Event: {result['event'].senior_name} — {result['event'].event_type.value}"):
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.markdown("**PERCEPTION**")
+                    st.info(result['perception'])
+                with col2:
+                    st.markdown("**REASONING**")
+                    st.info(result['reasoning'])
+                st.markdown("**ACTIONS TAKEN:**")
+                for ar in result["action_results"]:
+                    st.success(f"✓ {ar['message']}")
+    else:
+        st.info("Trigger an event above to see the AI decision process")
+
+    st.divider()
+
+    # Event log
+    st.subheader("Event History")
     if st.session_state.l4_event_log:
         log_df = pd.DataFrame([
             {
@@ -978,18 +1066,22 @@ def render_l4_page(events: List[Event], seniors: List[Senior], caregivers: List[
             }
             for e in st.session_state.l4_event_log[-10:]
         ])
-        st.table(log_df)
+        st.dataframe(log_df, hide_index=True, use_container_width=True)
+    else:
+        st.info("No events triggered yet")
 
 def render_typhoon_scenario(seniors: List[Senior], caregivers: List[Caregiver]):
     """Render Typhoon Scenario - integrated L3 + L4."""
-    st.header("🌪️ Typhoon Scenario")
-    st.warning("Demo Centrepiece: Mr Tan falls AND a caregiver cancels simultaneously")
+    st.subheader("Typhoon Scenario")
+    st.markdown("**Demo Centrepiece:** Mr Tan falls AND Nurse Aileen cancels simultaneously")
+    st.markdown("Watch L3 re-optimize and L4 respond in real-time")
 
     # Typhoon trigger button with debounce
     if st.session_state.l4_typhoon_countdown > 0:
-        st.button(f"Typhoon Triggered! (Wait {st.session_state.l4_typhoon_countdown}s)", disabled=True)
+        st.progress(1 - st.session_state.l4_typhoon_countdown / 10, text=f"Cooldown: {st.session_state.l4_typhoon_countdown}s")
+        st.button(f"Scenario Active (Wait {st.session_state.l4_typhoon_countdown}s)", disabled=True)
     else:
-        if st.button("🌪️ Trigger Typhoon Scenario"):
+        if st.button("Trigger Typhoon Scenario", type="primary"):
             # Sequential execution as per spec
             # T+0: Typhoon triggered
             # T+5: L3 receives cancellation, L4 perceives fall
@@ -1066,268 +1158,83 @@ def render_typhoon_scenario(seniors: List[Senior], caregivers: List[Caregiver]):
 # =============================================================================
 
 def render_welcome_page():
-    """Render the welcoming home page with explanations."""
-    st.title("🏥 AgeCareAI")
-    st.markdown("### Smart Elder Care for Singapore")
-    st.markdown("---")
+    """Render the home page with system overview."""
+    st.title("AgeCareAI")
+    st.markdown("Autonomous Elder Care Platform — Singapore")
+    st.divider()
 
-    # Why this matters
-    st.markdown("## 🤔 The Problem We're Solving")
-    st.markdown("""
-    Singapore has one of the fastest-aging populations in the world. By 2030, 1 in 4 Singaporeans
-    will be over 65. Many elderly live alone or with family members who work full-time.
+    # Key metrics
+    st.subheader("System Overview")
+    m_col1, m_col2, m_col3, m_col4 = st.columns(4)
+    with m_col1:
+        st.metric("AI Layers", "4", "Integrated")
+    with m_col2:
+        st.metric("Risk Prediction", "XGBoost", "ML Model")
+    with m_col3:
+        st.metric("Scheduling", "OR-Tools", "MILP Optimization")
+    with m_col4:
+        st.metric("Response", "Real-time", "24/7 Monitoring")
 
-    **The challenge:** How do we make sure every elderly person gets the care they need,
-    when they need it, without overwhelming caregivers and health systems?
+    st.divider()
 
-    **Our answer:** An AI-powered system that works 24/7, helps caregivers prioritize,
-    and responds to emergencies instantly.
-    """)
-
-    st.markdown("---")
-
-    # Who benefits
-    st.markdown("## 🎯 Who Benefits Most")
-
-    col1, col2, col3 = st.columns(3)
-
+    # Brief context
+    st.subheader("Platform Purpose")
+    col1, col2 = st.columns([3, 1])
     with col1:
-        st.markdown("### 👴👵 The Elderly")
-        st.markdown("""
-        **Direct benefit:** Faster response when accidents happen.
-
-        - Falls detected immediately — no lying on the floor for hours
-        - Health risks identified before they become emergencies
-        - Medication reminders reduce missed doses
-        - Same caregiver visits — building trust and familiarity
-        """)
+        st.markdown("AgeCareAI addresses Singapore's elder care challenge through four integrated AI layers: fall detection, health risk prediction, caregiver scheduling, and autonomous care response.")
     with col2:
-        st.markdown("### 👨‍👩‍👧 Families")
-        st.markdown("""
-        **Direct benefit:** Peace of mind, knowing AI is watching 24/7.
+        st.metric("Singapore 2030", "1 in 4", "Citizens over 65")
 
-        - Instant alerts when something happens
-        - Clear visibility into parent's health trends
-        - Know that scheduling is optimized for their loved one
-        - Less anxiety about parents living alone
-        """)
-    with col3:
-        st.markdown("### 🏥 Healthcare System")
-        st.markdown("""
-        **Direct benefit:** Better resource allocation, reduced hospital readmissions.
+    st.divider()
 
-        - Nurses see risk-ranked patient lists — focus energy where needed most
-        - Schedule optimization reduces travel time, sees more patients per day
-        - High-risk patients get preventive care, avoiding costly hospitalizations
-        - Administrative burden reduced significantly
-        """)
+    # Navigation
+    st.subheader("Navigate")
+    nav_data = {
+        "Layer": ["L1", "L2", "L3", "L4"],
+        "Function": ["Fall Detection", "Health Risk Dashboard", "Caregiver Schedule", "Care Agent"],
+        "Technology": ["RandomForest CNN", "XGBoost + SHAP", "OR-Tools MILP", "Decision Tree"],
+        "Benefit": ["Immediate alerts", "Risk-ranked worklist", "Optimal assignments", "Automated response"]
+    }
+    st.dataframe(pd.DataFrame(nav_data), use_container_width=True, hide_index=True)
 
-    st.markdown("---")
 
-    # How the system works together
-    st.markdown("## 🔗 How The 4 AI Layers Work Together")
-    st.markdown("""
-    AgeCareAI isn't 4 separate tools — it's **one integrated system** where each layer feeds into the next.
-    Think of it like a well-coordinated care team:
-    """)
-
-    # Flow diagram as text
-    st.markdown("""
-    ```
-    ┌─────────────────────────────────────────────────────────────────────┐
-    │                    THE AGE CARE AI SYSTEM                           │
-    │                                                                     │
-    │   LAYER 1                    LAYER 2                               │
-    │   ┌─────────────┐           ┌─────────────┐                        │
-    │   │ FALL         │           │ HEALTH      │                        │
-    │   │ DETECTION    │──────────▶│ RISK        │                        │
-    │   │ (Wearable    │  Falls   │ PREDICTION  │                        │
-    │   │  Sensor)     │  trigger  │ (Dashboard) │                        │
-    │   └─────────────┘           └─────────────┘                        │
-    │         │                           │                               │
-    │         │                           │ High-risk                    │
-    │         │                           │ patients get                 │
-    │         │                           │ priority                     │
-    │         ▼                           ▼                               │
-    │   ┌─────────────────────────────────────────────┐                   │
-    │   │              LAYER 3                        │                   │
-    │   │         CAREGIVER SCHEDULE                 │                   │
-    │   │         OPTIMIZER                          │                   │
-    │   │  • Same-zone preference                    │                   │
-    │   │  • Skills matched to patient needs         │                   │
-    │   │  • High-risk = higher visit priority       │                   │
-    │   └─────────────────────────────────────────────┘                   │
-    │                      │                                               │
-    │                      │ When emergency happens:                      │
-    │                      ▼                                               │
-    │   ┌─────────────────────────────────────────────┐                   │
-    │   │              LAYER 4                        │                   │
-    │   │         CARE AGENT                          │                   │
-    │   │  (Automatic Response System)                │                   │
-    │   │  • Alert family immediately                │                   │
-    │   │  • Call ambulance if fall + red risk       │                   │
-    │   │  • Book polyclinic if vitals concerning   │                   │
-    │   │  • Log everything to medical records       │                   │
-    │   └─────────────────────────────────────────────┘                   │
-    └─────────────────────────────────────────────────────────────────────┘
-    ```
-    """)
-
-    st.markdown("---")
-
-    # The workflow
-    st.markdown("## ⚙️ How It Works In Practice")
-
-    st.markdown("### Real-Time Monitoring vs. Daily Planning")
-    st.markdown("""
-    The system runs in **two modes simultaneously:**
-    """)
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.markdown("### 🔴 24/7 Monitoring (L1 + L4)")
-        st.markdown("""
-        **Always watching** — even when no one is looking:
-
-        - Wearable sensors on patients send data every second
-        - L1 AI checks: "Is this a fall?"
-        - If fall detected → L4 immediately alerts family + decides response
-        - If vitals drop → L4 decides: family call? polyclinic? ambulance?
-
-        **Result:** Average response time drops from hours to minutes.
-        """)
-    with col2:
-        st.markdown("### 📅 Daily Planning (L2 + L3)")
-        st.markdown("""
-        **Every morning, the system prepares:**
-
-        - L2 reviews all patients → ranks by readmission risk
-        - L3 creates optimal schedule for each caregiver
-        - High-risk patients get priority slots
-        - If a caregiver calls in sick → L3 re-optimizes in milliseconds
-
-        **Result:** Nurses spend less time planning, more time caring.
-        """)
-
-    st.markdown("---")
-
-    # What each user does
-    st.markdown("## 👤 What Each Person Does")
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-        st.markdown("### 🧓 Elderly Patient")
-        st.markdown("""
-        **Their experience:**
-        1. Wears a small sensor on their wrist (like a watch)
-        2. Goes about their normal day
-        3. If they fall, help comes automatically
-        4. If they miss medication, they get a friendly reminder
-
-        **They don't need to operate any app** — it's all automatic.
-        """)
-    with col2:
-        st.markdown("### 👩‍⚕️ Nurse / Caregiver")
-        st.markdown("""
-        **Their experience:**
-        1. Opens the dashboard each morning
-        2. Sees their assigned patients, optimized by route and priority
-        3. During visits, they see patient history and risk factors
-        4. If urgent alert comes in, they know exactly what to do
-
-        **They spend 80% less time on planning**, 80% more time on care.
-        """)
-
-    st.markdown("---")
-
-    # Regional expansion
-    st.markdown("## 🌍 Beyond Singapore")
-    st.markdown("""
-    Singapore is the first deployment because we understand the local context — the zones,
-    healthcare system, and demographics. But **every developed nation faces the same challenge:**
-    """)
-
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        st.markdown("### 🇯🇵 Japan")
-        st.markdown("""
-        28% of population over 65.
-        Most advanced aging society.
-        Severe caregiver shortage.
-        """)
-    with col2:
-        st.markdown("### 🇰🇷 South Korea")
-        st.markdown("""
-        Fastest aging population.
-        Low birth rate amplifies problem.
-        Already testing AI elder care.
-        """)
-    with col3:
-        st.markdown("### 🇹🇼 Taiwan")
-        st.markdown("""
-        17% over 65, rising fast.
-        Strong tech sector ready to help.
-        Similar healthcare system to Singapore.
-        """)
-
-    st.markdown("""
-    **After Singapore:** We can adapt the same AI system for any country.
-    The core technology (fall detection, risk prediction, scheduling, care response)
-    works anywhere. We just need to:
-    1. Connect to local healthcare systems
-    2. Train on local demographics
-    3. Integrate with local emergency services
-    """)
-
-    st.markdown("---")
-
-    # How to explore
-    st.markdown("## 🔍 Explore the Demo")
-    st.markdown("""
-    Use the **left sidebar menu** to see each layer in action:
-
-    | Page | What It Does | Who Benefits |
-    |------|-------------|--------------|
-    | **L1: Fall Detection** | Detects falls from wearable sensor data | Elderly, Families |
-    | **L2: Health Risk** | Predicts 30-day readmission risk for each patient | Nurses, Healthcare System |
-    | **L3: Schedule** | Optimizes caregiver assignments automatically | Caregivers, Patients |
-    | **L4: Care Agent** | Automatically responds to emergencies | Everyone |
-
-    **Start with L1** to see fall detection, then work your way up to L4!
-    """)
 
 def main():
     st.set_page_config(
-        page_title="AgeCareAI - Elder Care Platform",
+        page_title="AgeCareAI — Smart Elder Care",
         page_icon="🏥",
-        layout="wide"
+        layout="wide",
+        menu_items={
+            "About": "AgeCareAI — Autonomous Elder Care Platform for Singapore",
+            "Get help": None,
+            "Report a bug": None
+        }
     )
 
     init_session_state()
 
-    # Sidebar navigation with "Home" option
+    # Sidebar navigation
     with st.sidebar:
-        st.header("🏥 AgeCareAI")
-        st.markdown("---")
-        st.markdown("**Select a page:**")
+        st.title("AgeCareAI")
+        st.markdown("Smart Elder Care Platform")
+        st.divider()
+
         page_options = [
-            "🏠 Home (Start Here)",
-            "🦶 L1: Fall Detection",
-            "📊 L2: Health Risk",
-            "👩‍⚕️ L3: Caregiver Schedule",
-            "🤖 L4: Care Agent"
+            "Home",
+            "L1: Fall Detection",
+            "L2: Health Risk",
+            "L3: Caregiver Schedule",
+            "L4: Care Agent"
         ]
         selected_page = st.radio(
-            "Navigation:",
+            "Navigate:",
             page_options,
             index=0,
-            label_visibility="collapsed"
+            horizontal=True
         )
-        st.markdown("---")
-        st.markdown("*AgeCareAI — Smart Elder Care for Singapore*")
+
+        st.divider()
+        st.caption("Singapore Eldercare AI v1.0")
 
     # Initialize data (only once)
     if 'seniors' not in st.session_state:
@@ -1355,15 +1262,15 @@ def main():
         st.session_state.l4_typhoon_countdown -= 1
 
     # Route to selected page
-    if selected_page == "🏠 Home (Start Here)":
+    if selected_page == "Home":
         render_welcome_page()
-    elif selected_page == "🦶 L1: Fall Detection":
+    elif selected_page == "L1: Fall Detection":
         render_l1_page(st.session_state.fall_detector, st.session_state.sequences)
-    elif selected_page == "📊 L2: Health Risk":
+    elif selected_page == "L2: Health Risk":
         render_l2_page(st.session_state.risk_predictor)
-    elif selected_page == "👩‍⚕️ L3: Caregiver Schedule":
+    elif selected_page == "L3: Caregiver Schedule":
         render_l3_page(st.session_state.seniors, st.session_state.caregivers)
-    elif selected_page == "🤖 L4: Care Agent":
+    elif selected_page == "L4: Care Agent":
         render_typhoon_scenario(st.session_state.seniors, st.session_state.caregivers)
         st.divider()
         render_l4_page(st.session_state.preloaded_events, st.session_state.seniors, st.session_state.caregivers)
