@@ -1053,90 +1053,99 @@ def render_typhoon_scenario(seniors: List[Senior], caregivers: List[Caregiver]):
 def render_welcome_page():
     """Render the welcoming home page with explanations."""
     st.title("🏥 AgeCareAI")
-    st.markdown("### Autonomous Elder Care Platform — Singapore")
+    st.markdown("### Smart Elder Care for Singapore")
     st.markdown("---")
 
-    # What is this app?
-    st.markdown("## 📋 What Is This App?")
+    # Why this matters
+    st.markdown("## 🤔 Why This Matters")
     st.markdown("""
-    **AgeCareAI** is a demonstration of how Machine Learning and AI can help care for elderly residents in Singapore.
-    It simulates a care system with **4 intelligent layers** that work together to keep seniors safe.
+    Singapore's population is aging rapidly. Many elderly live alone or with working family members
+    who cannot check on them 24/7. When something goes wrong — a fall, a drop in oxygen levels,
+    or missed medication — every minute counts.
+
+    **AgeCareAI** shows how technology can help families and caregivers act faster,
+    make better decisions, and give our elderly the care they deserve.
     """)
+
     st.markdown("---")
 
-    # The 4 Layers explained simply
-    st.markdown("## 🔧 The 4 AI Layers (Simple Explanation)")
+    # Real scenarios
+    st.markdown("## 💡 How AI Helps (Real Scenarios)")
 
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("### 🦶 Layer 1: Fall Detection")
+        st.markdown("### 🦶 Mrs. Tan's Story")
         st.markdown("""
-        **What it does:** Detects when a senior falls using data from a wearable sensor.
+        Mrs. Tan, 78, lives alone in Bedok. One evening, she slips in the bathroom.
 
-        **How:** The sensor tracks movement patterns. When a fall pattern is detected
-        (sudden change in movement), the system alerts caregivers immediately.
+        **Without AI:** She might lie there for hours before someone notices.
 
-        **Try it:** Select "L1 Fall Detection" from the menu and click different
-        movement types to see how the AI classifies them.
+        **With AgeCareAI:** Her wearable sensor detects the fall pattern immediately.
+        Within seconds, her family and caregiver are alerted. Help arrives within 20 minutes.
         """)
-
-        st.markdown("### 📊 Layer 2: Health Risk Dashboard")
+        st.markdown("---")
+        st.markdown("### 📊 Mr. Lim's Check-up")
         st.markdown("""
-        **What it does:** Predicts which seniors might need hospital readmission within 30 days.
+        Mr. Lim, 72, has chronic heart disease. His doctor wants to know
+        which patients need the most attention this week.
 
-        **How:** Using 7 health factors (age, heart rate, oxygen levels, etc.),
-        the AI predicts high/medium/low risk. It also explains WHY a senior is high-risk
-        using SHAP values (which factors matter most).
+        **Without AI:** Nurse reviews 50 patient files manually — takes 4 hours.
 
-        **Try it:** Select "L2 Health Risk" to see all 20 seniors ranked by risk level.
-        Click on any senior to see what makes them high-risk.
+        **With AgeCareAI:** The system ranks all patients by risk level in seconds.
+        The nurse knows exactly who to visit first. High-risk patients get same-day checks.
         """)
 
     with col2:
-        st.markdown("### 👩‍⚕️ Layer 3: Caregiver Schedule")
+        st.markdown("### 👩‍⚕️ The Caregiver's Day")
         st.markdown("""
-        **What it does:** Automatically assigns caregivers to seniors for the day.
+        Nurse Aileen Tan cares for 8 elderly patients across different parts of Singapore.
 
-        **How:** Uses mathematical optimization to match caregivers to seniors based on:
-        - Caregiver certifications (some seniors need specialized care)
-        - Zone/location (prefer same area)
-        - Availability
+        **Without AI:** She spends 2 hours planning her route and might accidentally
+        skip a patient due to scheduling conflicts.
 
-        **Try it:** Select "L3 Schedule" to see today's assignments. Click
-        "Cancel" on any caregiver to see the schedule automatically re-optimize.
+        **With AgeCareAI:** The system automatically creates the optimal schedule
+        in milliseconds — matching her skills to each patient's needs and minimizing travel time.
         """)
-
-        st.markdown("### 🤖 Layer 4: Care Agent")
+        st.markdown("---")
+        st.markdown("### 🤖 When Everything Happens at Once")
         st.markdown("""
-        **What it does:** Responds to emergencies automatically.
+        During a heavy thunderstorm (a "typhoon scenario"), two caregivers call in sick
+        and three patients need urgent attention simultaneously.
 
-        **How:** When an event occurs (fall, low oxygen, missed medication),
-        the AI decides what to do: alert family, call ambulance, log to medical records.
+        **Without AI:** Chaos. Administrators scramble. Some patients wait hours.
 
-        **Try it:** Select "L4 Care Agent" and click the event buttons to see
-        how the AI responds. Try the **Typhoon Scenario** button — this simulates
-        a crisis where everything happens at once!
+        **With AgeCareAI:** The system immediately re-optimizes all schedules and
+        shows staff exactly what actions to take. Everything is coordinated in real-time.
         """)
 
     st.markdown("---")
-    st.markdown("## 🎯 How to Use This Demo")
+
+    # How to explore
+    st.markdown("## 🔍 Explore the Demo")
     st.markdown("""
-    1. **Start with any layer** by selecting from the left menu
-    2. **Follow the instructions** on each page — click buttons to interact
-    3. **The Typhoon Scenario** (in L4) is the highlight — it shows all 4 layers
-       working together in a crisis!
+    Use the **left sidebar menu** to navigate through different parts of the system:
+
+    | Page | What You'll See |
+    |------|-----------------|
+    | **L1: Fall Detection** | Simulate a wearable sensor — see how the system detects falls vs normal walking |
+    | **L2: Health Risk** | View 20 simulated patients ranked by health risk — click to see why each person is flagged |
+    | **L3: Schedule** | See how caregivers are assigned to patients optimally — try canceling a caregiver |
+    | **L4: Care Agent** | Watch how the system responds to emergencies automatically |
+
+    **Start by clicking "L1 Fall Detection"** to experience how fall detection works!
     """)
 
     st.markdown("---")
-    st.markdown("## 🎓 For MGMT 655 Assignment")
+
+    # About the technology
+    st.markdown("## 🏥 Who This Is For")
     st.markdown("""
-    This app demonstrates:
-    - **L1**: CNN/RandomForest for time-series classification (accelerometer data)
-    - **L2**: XGBoost classifier + SHAP explainability
-    - **L3**: OR-Tools MILP for combinatorial optimization
-    - **L4**: Rule-based AI agent with decision tree
-    - **Integration**: Cross-layer state management in Streamlit
+    This demo is designed for:
+    - **Families** with elderly relatives who want to understand how AI can help
+    - **Caregivers and nurses** to see how technology supports their work
+    - **Healthcare administrators** exploring how to improve elder care systems
+    - **Anyone interested** in how AI can solve real problems in our communities
     """)
 
 def main():
