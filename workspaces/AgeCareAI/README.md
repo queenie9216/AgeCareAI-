@@ -1,13 +1,13 @@
 # AgeCareAI — Autonomous Elder Care Platform
 
-Singapore · MGMT 655 Individual Assignment · Week 9
+Singapore
 
 ## Four AI Layers
 
 | Layer  | Function              | Technology                             |
 | ------ | --------------------- | -------------------------------------- |
 | **L1** | Fall Detection        | RandomForest on accelerometer data     |
-| **L2** | Health Risk Dashboard | XGBoost + SHAP explainability          |
+| **L2** | Health Risk Dashboard | RandomForest + SHAP explainability     |
 | **L3** | Caregiver Scheduler   | OR-Tools MILP optimization             |
 | **L4** | Care Agent            | Decision tree with typhoon integration |
 
@@ -35,19 +35,21 @@ streamlit run app.py
 ```
 AgeCareAI/
 ├── app.py                 # Main Streamlit application
-├── requirements.txt        # Python dependencies
+├── requirements.txt       # Python dependencies
 ├── .streamlit/
 │   └── config.toml       # Streamlit configuration
-└── specs/                # Detailed specifications
+├── specs/                 # Detailed specifications
+├── 01-analysis/          # Analysis documents
+├── 02-plans/              # Implementation plans
+├── 03-user-flows/        # User flow documentation
+└── 04-validate/          # Validation reports
 ```
 
 ## Dependencies
 
 - streamlit >= 1.28.0
-- xgboost >= 2.0.0
+- scikit-learn >= 1.3.0
 - shap >= 0.44.0
 - ortools >= 9.8.0
-- scikit-learn >= 1.3.0
 - numpy >= 1.24.0
 - pandas >= 2.0.0
-- plotly >= 5.18.0
