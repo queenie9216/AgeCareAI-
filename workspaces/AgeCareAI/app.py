@@ -897,7 +897,7 @@ def render_l2_page(risk_predictor: HealthRiskPredictor):
         else:
             return "background-color: #dcfce7; color: #166534"
 
-    styled_df = df.style.applymap(color_risk, subset=["Risk Level"])
+    styled_df = df.style.map(color_risk, subset=["Risk Level"])
     st.dataframe(styled_df, hide_index=True, use_container_width=True)
 
     st.divider()
@@ -1009,7 +1009,7 @@ def render_l4_page(events: List[Event], seniors: List[Senior], caregivers: List[
 
     for i, event in enumerate(events):
         with cols[i]:
-            risk_color = {"RED": "🔴", "AMBER": "🟡", "GREEN": "🟢"}[event.risk_band.value]
+            risk_color = {"Red": "🔴", "Amber": "🟡", "Green": "🟢"}[event.risk_band.value]
             st.markdown(f"**{event.senior_name}**, {event.senior_age}")
             st.markdown(f"Risk: {risk_color} {event.risk_band.value}")
             st.markdown(f"Type: {event.event_type.value}")
