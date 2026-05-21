@@ -501,8 +501,18 @@ class HealthRiskPredictor:
         risk_level = RiskLevel[labels[pred_class].upper()]
         risk_score = probs[2] + 0.5 * probs[1]  # Composite score
 
-        # SHAP values
-        shap_values = self.explainer.shap_values(features)[0]
+        # SHAP values - handle different array shapes from TreeExplainer
+        raw_shap = self.explainer.shap_values(features)
+        # TreeExplainer returns shape (n_classes, n_features) or (n_features,) depending on version
+        if isinstance(raw_shap, list):
+            # Multi-class: use the SHAP values for the predicted class
+            shap_values = np.array(raw_shap[pred_class])
+        elif len(raw_shap.shape) == 2:
+            # 2D array: use the predicted class row
+            shap_values = raw_shap[pred_class] if raw_shap.shape[0] > 1 else raw_shap[0]
+        else:
+            shap_values = np.array(raw_shap)
+
         factor_indices = np.argsort(np.abs(shap_values))[-3:][::-1]
 
         top_3_factors = []
@@ -1040,29 +1050,126 @@ def render_typhoon_scenario(seniors: List[Senior], caregivers: List[Caregiver]):
 # MAIN APP
 # =============================================================================
 
+def render_welcome_page():
+    """Render the welcoming home page with explanations."""
+    st.title("🏥 AgeCareAI")
+    st.markdown("### Autonomous Elder Care Platform — Singapore")
+    st.markdown("---")
+
+    # What is this app?
+    st.markdown("## 📋 What Is This App?")
+    st.markdown("""
+    **AgeCareAI** is a demonstration of how Machine Learning and AI can help care for elderly residents in Singapore.
+    It simulates a care system with **4 intelligent layers** that work together to keep seniors safe.
+    """)
+    st.markdown("---")
+
+    # The 4 Layers explained simply
+    st.markdown("## 🔧 The 4 AI Layers (Simple Explanation)")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown("### 🦶 Layer 1: Fall Detection")
+        st.markdown("""
+        **What it does:** Detects when a senior falls using data from a wearable sensor.
+
+        **How:** The sensor tracks movement patterns. When a fall pattern is detected
+        (sudden change in movement), the system alerts caregivers immediately.
+
+        **Try it:** Select "L1 Fall Detection" from the menu and click different
+        movement types to see how the AI classifies them.
+        """)
+
+        st.markdown("### 📊 Layer 2: Health Risk Dashboard")
+        st.markdown("""
+        **What it does:** Predicts which seniors might need hospital readmission within 30 days.
+
+        **How:** Using 7 health factors (age, heart rate, oxygen levels, etc.),
+        the AI predicts high/medium/low risk. It also explains WHY a senior is high-risk
+        using SHAP values (which factors matter most).
+
+        **Try it:** Select "L2 Health Risk" to see all 20 seniors ranked by risk level.
+        Click on any senior to see what makes them high-risk.
+        """)
+
+    with col2:
+        st.markdown("### 👩‍⚕️ Layer 3: Caregiver Schedule")
+        st.markdown("""
+        **What it does:** Automatically assigns caregivers to seniors for the day.
+
+        **How:** Uses mathematical optimization to match caregivers to seniors based on:
+        - Caregiver certifications (some seniors need specialized care)
+        - Zone/location (prefer same area)
+        - Availability
+
+        **Try it:** Select "L3 Schedule" to see today's assignments. Click
+        "Cancel" on any caregiver to see the schedule automatically re-optimize.
+        """)
+
+        st.markdown("### 🤖 Layer 4: Care Agent")
+        st.markdown("""
+        **What it does:** Responds to emergencies automatically.
+
+        **How:** When an event occurs (fall, low oxygen, missed medication),
+        the AI decides what to do: alert family, call ambulance, log to medical records.
+
+        **Try it:** Select "L4 Care Agent" and click the event buttons to see
+        how the AI responds. Try the **Typhoon Scenario** button — this simulates
+        a crisis where everything happens at once!
+        """)
+
+    st.markdown("---")
+    st.markdown("## 🎯 How to Use This Demo")
+    st.markdown("""
+    1. **Start with any layer** by selecting from the left menu
+    2. **Follow the instructions** on each page — click buttons to interact
+    3. **The Typhoon Scenario** (in L4) is the highlight — it shows all 4 layers
+       working together in a crisis!
+    """)
+
+    st.markdown("---")
+    st.markdown("## 🎓 For MGMT 655 Assignment")
+    st.markdown("""
+    This app demonstrates:
+    - **L1**: CNN/RandomForest for time-series classification (accelerometer data)
+    - **L2**: XGBoost classifier + SHAP explainability
+    - **L3**: OR-Tools MILP for combinatorial optimization
+    - **L4**: Rule-based AI agent with decision tree
+    - **Integration**: Cross-layer state management in Streamlit
+    """)
+
 def main():
     st.set_page_config(
-        page_title="AgeCareAI",
+        page_title="AgeCareAI - Elder Care Platform",
         page_icon="🏥",
         layout="wide"
     )
 
     init_session_state()
 
-    # App header
-    st.title("AgeCareAI")
-    st.caption("Autonomous Elder Care Platform — Singapore Elder Care System v1.0")
-
-    # Sidebar navigation
+    # Sidebar navigation with "Home" option
     with st.sidebar:
-        st.header("Navigation")
-        layer = st.radio(
-            "Select Layer:",
-            ["L1: Fall Detection", "L2: Health Risk", "L3: Schedule", "L4: Care Agent"]
+        st.header("🏥 AgeCareAI")
+        st.markdown("---")
+        st.markdown("**Select a page:**")
+        page_options = [
+            "🏠 Home (Start Here)",
+            "🦶 L1: Fall Detection",
+            "📊 L2: Health Risk",
+            "👩‍⚕️ L3: Caregiver Schedule",
+            "🤖 L4: Care Agent"
+        ]
+        selected_page = st.radio(
+            "Navigation:",
+            page_options,
+            index=0,
+            label_visibility="collapsed"
         )
-        st.session_state.current_layer = layer
+        st.markdown("---")
+        st.markdown("*MGMT 655 — Week 9 Assignment*")
 
-    # Initialize data
+    # Initialize data (only once)
     if 'seniors' not in st.session_state:
         st.session_state.seniors = generate_singapore_seniors()
 
@@ -1070,10 +1177,12 @@ def main():
         st.session_state.caregivers = generate_caregivers()
 
     if 'fall_detector' not in st.session_state:
-        st.session_state.fall_detector = FallDetector()
+        with st.spinner("Loading AI models..."):
+            st.session_state.fall_detector = FallDetector()
 
     if 'risk_predictor' not in st.session_state:
-        st.session_state.risk_predictor = HealthRiskPredictor(st.session_state.seniors)
+        with st.spinner("Analyzing health risks..."):
+            st.session_state.risk_predictor = HealthRiskPredictor(st.session_state.seniors)
 
     if 'sequences' not in st.session_state:
         st.session_state.sequences = {}
@@ -1085,14 +1194,16 @@ def main():
     if st.session_state.l4_typhoon_countdown > 0:
         st.session_state.l4_typhoon_countdown -= 1
 
-    # Route to selected layer
-    if layer == "L1: Fall Detection":
+    # Route to selected page
+    if selected_page == "🏠 Home (Start Here)":
+        render_welcome_page()
+    elif selected_page == "🦶 L1: Fall Detection":
         render_l1_page(st.session_state.fall_detector, st.session_state.sequences)
-    elif layer == "L2: Health Risk":
+    elif selected_page == "📊 L2: Health Risk":
         render_l2_page(st.session_state.risk_predictor)
-    elif layer == "L3: Schedule":
+    elif selected_page == "👩‍⚕️ L3: Caregiver Schedule":
         render_l3_page(st.session_state.seniors, st.session_state.caregivers)
-    elif layer == "L4: Care Agent":
+    elif selected_page == "🤖 L4: Care Agent":
         render_typhoon_scenario(st.session_state.seniors, st.session_state.caregivers)
         st.divider()
         render_l4_page(st.session_state.preloaded_events, st.session_state.seniors, st.session_state.caregivers)
