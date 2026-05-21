@@ -450,10 +450,10 @@ class FallDetector:
 # =============================================================================
 
 class HealthRiskPredictor:
-    """XGBoost-based health risk predictor with SHAP explainability."""
+    """GradientBoosting-based health risk predictor with SHAP explainability."""
 
     def __init__(self, seniors: List[Senior]):
-        from xgboost import XGBClassifier
+        from sklearn.ensemble import GradientBoostingClassifier
         import shap
 
         self.seniors = seniors
@@ -467,13 +467,10 @@ class HealthRiskPredictor:
             X_train.append([f.age, f.resting_hr, f.spo2, f.sleep_hours, f.step_count, f.prev_hospitalisations, f.frailty_index])
             y_train.append(self._clinical_risk_label(senior))
 
-        self.model = XGBClassifier(
+        self.model = GradientBoostingClassifier(
             n_estimators=100,
             max_depth=4,
             learning_rate=0.1,
-            objective='multi:softprob',
-            num_class=3,
-            eval_metric='mlogloss',
             random_state=42
         )
         self.model.fit(X_train, y_train)
