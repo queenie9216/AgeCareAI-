@@ -497,11 +497,17 @@ class HealthRiskPredictor:
         risk_level = RiskLevel[labels[pred_class].upper()]
         risk_score = probs[2] + 0.5 * probs[1]  # Composite score
 
-        # SHAP values - handle different array shapes from TreeExplainer
-        raw_shap = self.explainer.shap_values(features)
-        # TreeExplainer returns shape (n_classes, n_features) or (n_features,) depending on version
-        if isinstance(raw_shap, list):
-            # Multi-class: use the SHAP values for the predicted class
+        # SHAP values - convert to numpy array for shap
+        features_np = np.array(features)
+        raw_shap = self.explainer.shap_values(features_np)
+
+        # Handle different array shapes from TreeExplainer
+        # RandomForest returns shape (1, n_features, n_classes) - 3D
+        if isinstance(raw_shap, np.ndarray) and len(raw_shap.shape) == 3:
+            # Shape is (1, n_features, n_classes) - extract for predicted class
+            shap_values = raw_shap[0, :, pred_class]
+        elif isinstance(raw_shap, list):
+            # Multi-class list: use the SHAP values for the predicted class
             shap_values = np.array(raw_shap[pred_class])
         elif len(raw_shap.shape) == 2:
             # 2D array: use the predicted class row
