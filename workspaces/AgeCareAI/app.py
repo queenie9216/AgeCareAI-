@@ -1057,95 +1057,231 @@ def render_welcome_page():
     st.markdown("---")
 
     # Why this matters
-    st.markdown("## 🤔 Why This Matters")
+    st.markdown("## 🤔 The Problem We're Solving")
     st.markdown("""
-    Singapore's population is aging rapidly. Many elderly live alone or with working family members
-    who cannot check on them 24/7. When something goes wrong — a fall, a drop in oxygen levels,
-    or missed medication — every minute counts.
+    Singapore has one of the fastest-aging populations in the world. By 2030, 1 in 4 Singaporeans
+    will be over 65. Many elderly live alone or with family members who work full-time.
 
-    **AgeCareAI** shows how technology can help families and caregivers act faster,
-    make better decisions, and give our elderly the care they deserve.
+    **The challenge:** How do we make sure every elderly person gets the care they need,
+    when they need it, without overwhelming caregivers and health systems?
+
+    **Our answer:** An AI-powered system that works 24/7, helps caregivers prioritize,
+    and responds to emergencies instantly.
     """)
 
     st.markdown("---")
 
-    # Real scenarios
-    st.markdown("## 💡 How AI Helps (Real Scenarios)")
+    # Who benefits
+    st.markdown("## 🎯 Who Benefits Most")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.markdown("### 👴👵 The Elderly")
+        st.markdown("""
+        **Direct benefit:** Faster response when accidents happen.
+
+        - Falls detected immediately — no lying on the floor for hours
+        - Health risks identified before they become emergencies
+        - Medication reminders reduce missed doses
+        - Same caregiver visits — building trust and familiarity
+        """)
+    with col2:
+        st.markdown("### 👨‍👩‍👧 Families")
+        st.markdown("""
+        **Direct benefit:** Peace of mind, knowing AI is watching 24/7.
+
+        - Instant alerts when something happens
+        - Clear visibility into parent's health trends
+        - Know that scheduling is optimized for their loved one
+        - Less anxiety about parents living alone
+        """)
+    with col3:
+        st.markdown("### 🏥 Healthcare System")
+        st.markdown("""
+        **Direct benefit:** Better resource allocation, reduced hospital readmissions.
+
+        - Nurses see risk-ranked patient lists — focus energy where needed most
+        - Schedule optimization reduces travel time, sees more patients per day
+        - High-risk patients get preventive care, avoiding costly hospitalizations
+        - Administrative burden reduced significantly
+        """)
+
+    st.markdown("---")
+
+    # How the system works together
+    st.markdown("## 🔗 How The 4 AI Layers Work Together")
+    st.markdown("""
+    AgeCareAI isn't 4 separate tools — it's **one integrated system** where each layer feeds into the next.
+    Think of it like a well-coordinated care team:
+    """)
+
+    # Flow diagram as text
+    st.markdown("""
+    ```
+    ┌─────────────────────────────────────────────────────────────────────┐
+    │                    THE AGE CARE AI SYSTEM                           │
+    │                                                                     │
+    │   LAYER 1                    LAYER 2                               │
+    │   ┌─────────────┐           ┌─────────────┐                        │
+    │   │ FALL         │           │ HEALTH      │                        │
+    │   │ DETECTION    │──────────▶│ RISK        │                        │
+    │   │ (Wearable    │  Falls   │ PREDICTION  │                        │
+    │   │  Sensor)     │  trigger  │ (Dashboard) │                        │
+    │   └─────────────┘           └─────────────┘                        │
+    │         │                           │                               │
+    │         │                           │ High-risk                    │
+    │         │                           │ patients get                 │
+    │         │                           │ priority                     │
+    │         ▼                           ▼                               │
+    │   ┌─────────────────────────────────────────────┐                   │
+    │   │              LAYER 3                        │                   │
+    │   │         CAREGIVER SCHEDULE                 │                   │
+    │   │         OPTIMIZER                          │                   │
+    │   │  • Same-zone preference                    │                   │
+    │   │  • Skills matched to patient needs         │                   │
+    │   │  • High-risk = higher visit priority       │                   │
+    │   └─────────────────────────────────────────────┘                   │
+    │                      │                                               │
+    │                      │ When emergency happens:                      │
+    │                      ▼                                               │
+    │   ┌─────────────────────────────────────────────┐                   │
+    │   │              LAYER 4                        │                   │
+    │   │         CARE AGENT                          │                   │
+    │   │  (Automatic Response System)                │                   │
+    │   │  • Alert family immediately                │                   │
+    │   │  • Call ambulance if fall + red risk       │                   │
+    │   │  • Book polyclinic if vitals concerning   │                   │
+    │   │  • Log everything to medical records       │                   │
+    │   └─────────────────────────────────────────────┘                   │
+    └─────────────────────────────────────────────────────────────────────┘
+    ```
+    """)
+
+    st.markdown("---")
+
+    # The workflow
+    st.markdown("## ⚙️ How It Works In Practice")
+
+    st.markdown("### Real-Time Monitoring vs. Daily Planning")
+    st.markdown("""
+    The system runs in **two modes simultaneously:**
+    """)
 
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("### 🦶 Mrs. Tan's Story")
+        st.markdown("### 🔴 24/7 Monitoring (L1 + L4)")
         st.markdown("""
-        Mrs. Tan, 78, lives alone in Bedok. One evening, she slips in the bathroom.
+        **Always watching** — even when no one is looking:
 
-        **Without AI:** She might lie there for hours before someone notices.
+        - Wearable sensors on patients send data every second
+        - L1 AI checks: "Is this a fall?"
+        - If fall detected → L4 immediately alerts family + decides response
+        - If vitals drop → L4 decides: family call? polyclinic? ambulance?
 
-        **With AgeCareAI:** Her wearable sensor detects the fall pattern immediately.
-        Within seconds, her family and caregiver are alerted. Help arrives within 20 minutes.
+        **Result:** Average response time drops from hours to minutes.
         """)
-        st.markdown("---")
-        st.markdown("### 📊 Mr. Lim's Check-up")
-        st.markdown("""
-        Mr. Lim, 72, has chronic heart disease. His doctor wants to know
-        which patients need the most attention this week.
-
-        **Without AI:** Nurse reviews 50 patient files manually — takes 4 hours.
-
-        **With AgeCareAI:** The system ranks all patients by risk level in seconds.
-        The nurse knows exactly who to visit first. High-risk patients get same-day checks.
-        """)
-
     with col2:
-        st.markdown("### 👩‍⚕️ The Caregiver's Day")
+        st.markdown("### 📅 Daily Planning (L2 + L3)")
         st.markdown("""
-        Nurse Aileen Tan cares for 8 elderly patients across different parts of Singapore.
+        **Every morning, the system prepares:**
 
-        **Without AI:** She spends 2 hours planning her route and might accidentally
-        skip a patient due to scheduling conflicts.
+        - L2 reviews all patients → ranks by readmission risk
+        - L3 creates optimal schedule for each caregiver
+        - High-risk patients get priority slots
+        - If a caregiver calls in sick → L3 re-optimizes in milliseconds
 
-        **With AgeCareAI:** The system automatically creates the optimal schedule
-        in milliseconds — matching her skills to each patient's needs and minimizing travel time.
+        **Result:** Nurses spend less time planning, more time caring.
         """)
-        st.markdown("---")
-        st.markdown("### 🤖 When Everything Happens at Once")
+
+    st.markdown("---")
+
+    # What each user does
+    st.markdown("## 👤 What Each Person Does")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown("### 🧓 Elderly Patient")
         st.markdown("""
-        During a heavy thunderstorm (a "typhoon scenario"), two caregivers call in sick
-        and three patients need urgent attention simultaneously.
+        **Their experience:**
+        1. Wears a small sensor on their wrist (like a watch)
+        2. Goes about their normal day
+        3. If they fall, help comes automatically
+        4. If they miss medication, they get a friendly reminder
 
-        **Without AI:** Chaos. Administrators scramble. Some patients wait hours.
-
-        **With AgeCareAI:** The system immediately re-optimizes all schedules and
-        shows staff exactly what actions to take. Everything is coordinated in real-time.
+        **They don't need to operate any app** — it's all automatic.
         """)
+    with col2:
+        st.markdown("### 👩‍⚕️ Nurse / Caregiver")
+        st.markdown("""
+        **Their experience:**
+        1. Opens the dashboard each morning
+        2. Sees their assigned patients, optimized by route and priority
+        3. During visits, they see patient history and risk factors
+        4. If urgent alert comes in, they know exactly what to do
+
+        **They spend 80% less time on planning**, 80% more time on care.
+        """)
+
+    st.markdown("---")
+
+    # Regional expansion
+    st.markdown("## 🌍 Beyond Singapore")
+    st.markdown("""
+    Singapore is the first deployment because we understand the local context — the zones,
+    healthcare system, and demographics. But **every developed nation faces the same challenge:**
+    """)
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.markdown("### 🇯🇵 Japan")
+        st.markdown("""
+        28% of population over 65.
+        Most advanced aging society.
+        Severe caregiver shortage.
+        """)
+    with col2:
+        st.markdown("### 🇰🇷 South Korea")
+        st.markdown("""
+        Fastest aging population.
+        Low birth rate amplifies problem.
+        Already testing AI elder care.
+        """)
+    with col3:
+        st.markdown("### 🇹🇼 Taiwan")
+        st.markdown("""
+        17% over 65, rising fast.
+        Strong tech sector ready to help.
+        Similar healthcare system to Singapore.
+        """)
+
+    st.markdown("""
+    **After Singapore:** We can adapt the same AI system for any country.
+    The core technology (fall detection, risk prediction, scheduling, care response)
+    works anywhere. We just need to:
+    1. Connect to local healthcare systems
+    2. Train on local demographics
+    3. Integrate with local emergency services
+    """)
 
     st.markdown("---")
 
     # How to explore
     st.markdown("## 🔍 Explore the Demo")
     st.markdown("""
-    Use the **left sidebar menu** to navigate through different parts of the system:
+    Use the **left sidebar menu** to see each layer in action:
 
-    | Page | What You'll See |
-    |------|-----------------|
-    | **L1: Fall Detection** | Simulate a wearable sensor — see how the system detects falls vs normal walking |
-    | **L2: Health Risk** | View 20 simulated patients ranked by health risk — click to see why each person is flagged |
-    | **L3: Schedule** | See how caregivers are assigned to patients optimally — try canceling a caregiver |
-    | **L4: Care Agent** | Watch how the system responds to emergencies automatically |
+    | Page | What It Does | Who Benefits |
+    |------|-------------|--------------|
+    | **L1: Fall Detection** | Detects falls from wearable sensor data | Elderly, Families |
+    | **L2: Health Risk** | Predicts 30-day readmission risk for each patient | Nurses, Healthcare System |
+    | **L3: Schedule** | Optimizes caregiver assignments automatically | Caregivers, Patients |
+    | **L4: Care Agent** | Automatically responds to emergencies | Everyone |
 
-    **Start by clicking "L1 Fall Detection"** to experience how fall detection works!
-    """)
-
-    st.markdown("---")
-
-    # About the technology
-    st.markdown("## 🏥 Who This Is For")
-    st.markdown("""
-    This demo is designed for:
-    - **Families** with elderly relatives who want to understand how AI can help
-    - **Caregivers and nurses** to see how technology supports their work
-    - **Healthcare administrators** exploring how to improve elder care systems
-    - **Anyone interested** in how AI can solve real problems in our communities
+    **Start with L1** to see fall detection, then work your way up to L4!
     """)
 
 def main():
