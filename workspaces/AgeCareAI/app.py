@@ -450,10 +450,10 @@ class FallDetector:
 # =============================================================================
 
 class HealthRiskPredictor:
-    """GradientBoosting-based health risk predictor with SHAP explainability."""
+    """RandomForest-based health risk predictor with SHAP explainability."""
 
     def __init__(self, seniors: List[Senior]):
-        from sklearn.ensemble import GradientBoostingClassifier
+        from sklearn.ensemble import RandomForestClassifier
         import shap
 
         self.seniors = seniors
@@ -467,10 +467,9 @@ class HealthRiskPredictor:
             X_train.append([f.age, f.resting_hr, f.spo2, f.sleep_hours, f.step_count, f.prev_hospitalisations, f.frailty_index])
             y_train.append(self._clinical_risk_label(senior))
 
-        self.model = GradientBoostingClassifier(
+        self.model = RandomForestClassifier(
             n_estimators=100,
             max_depth=4,
-            learning_rate=0.1,
             random_state=42
         )
         self.model.fit(X_train, y_train)
