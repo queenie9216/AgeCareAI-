@@ -1,6 +1,6 @@
 """
 AgeCareAI — Autonomous Elder Care Platform
-Singapore · MGMT 655 Individual Assignment · Week 9
+Singapore
 
 A Streamlit application with 4 integrated AI layers:
 - L1: Fall Detection (RandomForest CNN)
@@ -1176,7 +1176,7 @@ def main():
             label_visibility="collapsed"
         )
         st.markdown("---")
-        st.markdown("*MGMT 655 — Week 9 Assignment*")
+        st.markdown("*AgeCareAI — Smart Elder Care for Singapore*")
 
     # Initialize data (only once)
     if 'seniors' not in st.session_state:
