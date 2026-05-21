@@ -1,4 +1,4 @@
-# AgeCareAI — Autonomous Elder Care Platform
+# AgeCareAI — Autonomous Elder Care Platform (101 tests)
 
 **What it does:** Detects falls, predicts health risks, optimizes caregiver schedules, and autonomously responds to care events — all in one Streamlit app.
 

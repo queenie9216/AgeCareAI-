@@ -1484,7 +1484,7 @@ def render_welcome_page():
 
 def main():
     st.set_page_config(
-        page_title="AgeCareAI — Smart Elder Care Platform",
+        page_title="AgeCareAI — Smart Elder Care Platform (101 tests)",
         page_icon="🏥",
         layout="wide",
         menu_items={
