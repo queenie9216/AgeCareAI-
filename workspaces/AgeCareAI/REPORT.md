@@ -209,7 +209,7 @@ model.fit(X, y)
 | Models retrain every cold start     | Medium   | Persist with `joblib`; load from disk at startup                                        |
 | L3 schedules one day only           | Medium   | Extend MILP to weekly horizon with shift-pattern constraints                            |
 | NEHR_LOG is simulated               | **High** | Implement NEHR FHIR `POST /DocumentReference` via IHiS API                              |
-| 101 unit tests                      | **High** | Full pytest suite: data models, ML (L1/L2), scheduler (L3), care agent (L4), report gen |
+| 112 unit tests                      | **High** | Full pytest suite: data models, ML (L1/L2), scheduler (L3), care agent (L4), report gen |
 
 ---
 

@@ -4,7 +4,7 @@ Singapore
 
 A Streamlit application with 4 integrated AI layers:
 - L1: Fall Detection (RandomForest CNN)
-- L2: Health Risk Dashboard (XGBoost + SHAP)
+- L2: Health Risk Dashboard (RandomForest + SHAP)
 - L3: Caregiver Schedule Optimiser (OR-Tools MILP)
 - L4: Autonomous Care Agent (Perception-Reasoning-Action)
 """
@@ -24,101 +24,159 @@ import time
 
 st.markdown("""
 <style>
-    /* Main theme colors */
+    /* Main theme colors - Healthcare Blue */
     :root {
-        --primary: #1E3A5F;
-        --secondary: #3B82F6;
-        --success: #10B981;
+        --primary: #2563EB;
+        --primary-dark: #1D4ED8;
+        --secondary: #0EA5E9;
+        --success: #22C55E;
         --warning: #F59E0B;
         --danger: #EF4444;
         --bg-dark: #0F172A;
         --bg-card: #1E293B;
-        --text-primary: #F8FAFC;
-        --text-secondary: #94A3B8;
+        --bg-card-hover: #334155;
+        --text-primary: #FFFFFF;
+        --text-secondary: #CBD5E1;
+        --text-muted: #94A3B8;
     }
 
     /* Page background */
     .stApp {
-        background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+        background: #0F172A !important;
     }
 
-    /* Headers */
-    h1, h2, h3 {
-        color: #F8FAFC !important;
+    /* Main content area */
+    .main .block-container {
+        background: #0F172A !important;
+        padding-top: 2rem;
+    }
+
+    /* All text - high contrast white */
+    body, .stApp, .stMarkdown, p, span, div {
+        color: #E2E8F0 !important;
+    }
+
+    /* Headers - bright white for maximum contrast */
+    h1 {
+        color: #FFFFFF !important;
+        font-weight: 700 !important;
+        font-size: 2rem !important;
+    }
+    h2 {
+        color: #FFFFFF !important;
+        font-weight: 600 !important;
+        font-size: 1.5rem !important;
+    }
+    h3 {
+        color: #FFFFFF !important;
+        font-weight: 600 !important;
+        font-size: 1.25rem !important;
+    }
+    h4 {
+        color: #E2E8F0 !important;
         font-weight: 600 !important;
     }
 
-    /* Metric cards */
+    /* Streamlit elements */
+    .stText, .stMarkdown p, .stMarkdown li {
+        color: #E2E8F0 !important;
+        font-size: 1rem !important;
+        line-height: 1.6 !important;
+    }
+
+    /* Metric cards - HIGH CONTRAST */
     [data-testid="stMetricValue"] {
-        font-size: 1.8rem !important;
-        font-weight: 700 !important;
-        color: #3B82F6 !important;
+        font-size: 2rem !important;
+        font-weight: 800 !important;
+        color: #FFFFFF !important;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.3);
     }
 
     [data-testid="stMetricLabel"] {
         color: #94A3B8 !important;
-        font-size: 0.85rem !important;
+        font-size: 0.9rem !important;
+        font-weight: 500 !important;
+        letter-spacing: 0.02em;
     }
 
-    /* Cards */
-    .stCard {
-        background: #1E293B;
-        border-radius: 12px;
-        padding: 1rem;
+    [data-testid="stMetricDelta"] {
+        color: #22C55E !important;
+    }
+
+    /* Dataframes - readable text */
+    [data-testid="stDataFrame"] {
+        background: #1E293B !important;
+        border-radius: 8px;
         border: 1px solid #334155;
     }
 
-    /* Dataframes */
-    [data-testid="stDataFrame"] {
-        background: #1E293B;
-        border-radius: 8px;
+    [data-testid="stDataFrame"] td {
+        color: #E2E8F0 !important;
+        background: #1E293B !important;
     }
 
-    /* Headers in dataframes */
     [data-testid="stDataFrame"] th {
         background: #334155 !important;
-        color: #F8FAFC !important;
+        color: #FFFFFF !important;
+        font-weight: 600 !important;
     }
 
-    /* Buttons */
+    [data-testid="stDataFrame"] tr {
+        background: #1E293B !important;
+    }
+
+    [data-testid="stDataFrame"] tr:nth-child(even) {
+        background: #252F3F !important;
+    }
+
+    /* Buttons - high contrast */
     .stButton > button {
-        background: #3B82F6;
-        color: white;
-        border-radius: 8px;
-        border: none;
-        padding: 0.5rem 1.5rem;
-        font-weight: 600;
-        transition: all 0.3s;
+        background: #2563EB !important;
+        color: #FFFFFF !important;
+        border-radius: 8px !important;
+        border: none !important;
+        padding: 0.5rem 1.5rem !important;
+        font-weight: 600 !important;
+        font-size: 1rem !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3) !important;
     }
 
     .stButton > button:hover {
-        background: #2563EB;
-        transform: translateY(-2px);
+        background: #1D4ED8 !important;
+        transform: translateY(-1px);
     }
 
     /* Success button */
     .success-btn > button {
-        background: #10B981 !important;
+        background: #22C55E !important;
+        color: #FFFFFF !important;
     }
 
     /* Danger button */
     .danger-btn > button {
         background: #EF4444 !important;
+        color: #FFFFFF !important;
     }
 
     /* Sidebar */
     [data-testid="stSidebar"] {
         background: #0F172A !important;
-        border-right: 1px solid #334155;
+        border-right: 1px solid #334155 !important;
     }
 
-    [data-testid="stSidebarNav"] {
-        background: #0F172A;
+    [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] {
+        color: #E2E8F0 !important;
     }
 
-    /* Radio buttons */
-    .stRadio > label {
-        color: #F8FAFC !important;
+    /* Sidebar navigation */
+    .stRadio label, .stCheckbox label {
+        color: #E2E8F0 !important;
+        font-size: 1rem !important;
+    }
+
+    /* Radio buttons selected */
+    .stRadio [data-checked="true"] {
+        background: #2563EB !important;
     }
 
     /* Dividers */
@@ -129,73 +187,186 @@ st.markdown("""
 
     /* Info boxes */
     .info-box {
-        background: #1E3A5F;
-        border-left: 4px solid #3B82F6;
-        padding: 1rem;
-        border-radius: 8px;
-        margin: 1rem 0;
+        background: #1E293B !important;
+        border-left: 4px solid #2563EB !important;
+        padding: 1rem !important;
+        border-radius: 8px !important;
+        margin: 1rem 0 !important;
+        color: #E2E8F0 !important;
     }
 
-    /* Risk indicators */
+    /* Success/Info boxes */
+    .stAlert {
+        border-radius: 8px !important;
+        background: #1E293B !important;
+        color: #E2E8F0 !important;
+    }
+
+    /* Success alerts */
+    .stSuccess {
+        background: rgba(34, 197, 94, 0.15) !important;
+        border: 1px solid #22C55E !important;
+        color: #22C55E !important;
+    }
+
+    /* Warning alerts */
+    .stWarning {
+        background: rgba(245, 158, 11, 0.15) !important;
+        border: 1px solid #F59E0B !important;
+        color: #F59E0B !important;
+    }
+
+    /* Error alerts */
+    .stError {
+        background: rgba(239, 68, 68, 0.15) !important;
+        border: 1px solid #EF4444 !important;
+        color: #FCA5A5 !important;
+    }
+
+    /* Info alerts */
+    .stInfo {
+        background: rgba(14, 165, 233, 0.15) !important;
+        border: 1px solid #0EA5E9 !important;
+        color: #7DD3FC !important;
+    }
+
+    /* Risk indicators - HIGH CONTRAST */
     .risk-high {
-        background: rgba(239, 68, 68, 0.15);
-        color: #FCA5A5;
-        padding: 0.25rem 0.75rem;
-        border-radius: 4px;
-        font-weight: 600;
+        background: rgba(239, 68, 68, 0.25) !important;
+        color: #FCA5A5 !important;
+        padding: 0.5rem 1rem !important;
+        border-radius: 6px !important;
+        font-weight: 700 !important;
+        font-size: 1rem !important;
+        border: 1px solid rgba(239, 68, 68, 0.4);
     }
 
     .risk-medium {
-        background: rgba(245, 158, 11, 0.15);
-        color: #FCD34D;
-        padding: 0.25rem 0.75rem;
-        border-radius: 4px;
-        font-weight: 600;
+        background: rgba(245, 158, 11, 0.25) !important;
+        color: #FCD34D !important;
+        padding: 0.5rem 1rem !important;
+        border-radius: 6px !important;
+        font-weight: 700 !important;
+        font-size: 1rem !important;
+        border: 1px solid rgba(245, 158, 11, 0.4);
     }
 
     .risk-low {
-        background: rgba(16, 185, 129, 0.15);
-        color: #6EE7B7;
-        padding: 0.25rem 0.75rem;
-        border-radius: 4px;
-        font-weight: 600;
+        background: rgba(34, 197, 94, 0.25) !important;
+        color: #86EFAC !important;
+        padding: 0.5rem 1rem !important;
+        border-radius: 6px !important;
+        font-weight: 700 !important;
+        font-size: 1rem !important;
+        border: 1px solid rgba(34, 197, 94, 0.4);
     }
 
-    /* Navigation active state */
-    .nav-active {
-        background: #3B82F6;
-        color: white;
-        padding: 0.5rem 1rem;
-        border-radius: 8px;
-    }
-
-    /* Alert styling */
-    .stAlert {
-        border-radius: 8px;
-    }
-
-    /* Subheader */
-    .stSubheader {
-        color: #F8FAFC !important;
-        font-size: 1.1rem !important;
-        font-weight: 600 !important;
-        margin-top: 1rem !important;
-    }
-
-    /* Tab styling */
+    /* Tabs */
     .stTabs [data-baseweb="tab-list"] {
-        background: #1E293B;
-        border-radius: 8px;
-        padding: 0.5rem;
+        background: #1E293B !important;
+        border-radius: 8px !important;
+        padding: 4px !important;
     }
 
     .stTabs [data-baseweb="tab"] {
         color: #94A3B8 !important;
+        font-weight: 500 !important;
     }
 
     .stTabs [aria-selected="true"] {
-        background: #3B82F6 !important;
-        color: white !important;
+        background: #2563EB !important;
+        color: #FFFFFF !important;
+        font-weight: 600 !important;
+    }
+
+    /* Subheaders */
+    .stSubheader {
+        color: #FFFFFF !important;
+        font-size: 1.2rem !important;
+        font-weight: 600 !important;
+        margin-top: 1.5rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    /* Expanders */
+    .streamlit-expander {
+        background: #1E293B !important;
+        border-radius: 8px !important;
+        border: 1px solid #334155 !important;
+    }
+
+    .streamlit-expander header {
+        color: #E2E8F0 !important;
+        font-weight: 500 !important;
+    }
+
+    /* Selectbox/Dropdown */
+    .stSelectbox label, .stMultiSelect label {
+        color: #E2E8F0 !important;
+        font-weight: 500 !important;
+    }
+
+    [data-testid="stSelectbox"] {
+        background: #1E293B !important;
+    }
+
+    /* Progress bar */
+    .stProgressBar {
+        color: #2563EB !important;
+    }
+
+    /* Charts */
+    [data-testid="stVegaLiteChart"] {
+        background: #1E293B !important;
+        border-radius: 8px !important;
+        padding: 1rem !important;
+    }
+
+    /* Tables in markdown */
+    .stMarkdown table {
+        background: #1E293B !important;
+        border-radius: 8px !important;
+    }
+
+    .stMarkdown th {
+        background: #334155 !important;
+        color: #FFFFFF !important;
+    }
+
+    .stMarkdown td {
+        color: #E2E8F0 !important;
+        background: #1E293B !important;
+    }
+
+    /* Code blocks */
+    code {
+        background: #334155 !important;
+        color: #E2E8F0 !important;
+        padding: 0.2rem 0.4rem !important;
+        border-radius: 4px !important;
+        font-family: 'Courier New', monospace !important;
+    }
+
+    pre {
+        background: #1E293B !important;
+        border: 1px solid #334155 !important;
+        border-radius: 8px !important;
+        padding: 1rem !important;
+    }
+
+    pre code {
+        background: transparent !important;
+        padding: 0 !important;
+    }
+
+    /* Hero section in welcome */
+    .hero-box {
+        background: linear-gradient(135deg, #1E3A5F 0%, #0F172A 100%) !important;
+        padding: 2rem !important;
+        border-radius: 12px !important;
+        margin-bottom: 2rem !important;
+        text-align: center !important;
+        border: 1px solid #334155 !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -1343,10 +1514,9 @@ def render_welcome_page():
     """Render the home page with system overview."""
     # Hero section
     st.markdown("""
-    <div style="background: linear-gradient(135deg, #1E3A5F 0%, #0F172A 100%);
-                padding: 2rem; border-radius: 12px; margin-bottom: 2rem; text-align: center;">
-        <h1 style="color: #F8FAFC; margin: 0; font-size: 2.5rem;">AgeCareAI</h1>
-        <p style="color: #94A3B8; margin: 0.5rem 0 0; font-size: 1.1rem;">
+    <div class="hero-box">
+        <h1 style="color: #FFFFFF; margin: 0; font-size: 2.5rem; font-weight: 700;">AgeCareAI</h1>
+        <p style="color: #CBD5E1; margin: 0.5rem 0 0; font-size: 1.1rem; font-weight: 400;">
             Autonomous Elder Care Platform — Built for Singapore
         </p>
     </div>
@@ -1360,7 +1530,7 @@ def render_welcome_page():
     with m_col1:
         st.metric("AI Layers", "4", "Integrated System")
     with m_col2:
-        st.metric("Risk Prediction", "XGBoost + SHAP", "Explainable AI")
+        st.metric("Risk Prediction", "RandomForest + SHAP", "Explainable AI")
     with m_col3:
         st.metric("Scheduling", "OR-Tools MILP", "Optimal Assignments")
     with m_col4:
